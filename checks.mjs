@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import{validateData,selectTickets,isOverdue,nextId}from './dist/model.mjs';
+const base={id:1,title:'Ship a project',project:'p',description:'Notes',status:'New',priority:'High',due:'2026-01-01',created:'2026-01-01T00:00:00Z',updated:'2026-01-01T00:00:00Z',checks:[],history:[]};
+const data={version:1,projects:[{id:'p',name:'Personal',color:'#123abc'}],tickets:[base,{...base,id:2,status:'Resolved',priority:'Low'}]};
+assert.equal(validateData(JSON.parse(JSON.stringify(data))).tickets.length,2);
+assert.equal(selectTickets(data,{scope:'done'}).length,1);
+assert.equal(selectTickets(data,{scope:'focus'}).length,1);
+assert.equal(selectTickets(data,{search:'ship',priority:'High'}).length,1);
+assert.equal(selectTickets(data,{project:'missing'}).length,0);
+assert.equal(isOverdue(base,'2026-02-01'),true);
+assert.equal(isOverdue(data.tickets[1],'2026-02-01'),false);
+assert.equal(nextId(data),3);
+assert.throws(()=>validateData({...data,tickets:[base,{...base}]}));
+assert.throws(()=>validateData({...data,tickets:[{...base,project:'missing'}]}));
+assert.throws(()=>validateData({...data,tickets:[{...base,checks:[{text:'x',done:'yes'}]}]}));
+assert.throws(()=>validateData({version:1,projects:[],tickets:[]}));
+console.log('12 checks passed: backup validation, filters, due dates, and ticket IDs.');
